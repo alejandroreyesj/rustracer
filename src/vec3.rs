@@ -10,9 +10,6 @@ pub struct Vec3 {
     z: f64,
 }
 
-pub type Point = Vec3;
-pub type Color = Vec3;
-
 impl Vec3 {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Self { x, y, z }
@@ -146,9 +143,9 @@ impl Div<f64> for Vec3 {
 
     fn div(self, rhs: f64) -> Self::Output {
         Self {
-            x: self.x / rhs,
-            y: self.y / rhs,
-            z: self.z / rhs,
+            x: self.x * (1.0 / rhs),
+            y: self.y * (1.0 / rhs),
+            z: self.z * (1.0 / rhs),
         }
     }
 }
@@ -156,9 +153,9 @@ impl Div<f64> for Vec3 {
 impl DivAssign<f64> for Vec3 {
     fn div_assign(&mut self, rhs: f64) {
         *self = Self {
-            x: self.x / rhs,
-            y: self.y / rhs,
-            z: self.z / rhs,
+            x: self.x * (1.0 / rhs),
+            y: self.y * (1.0 / rhs),
+            z: self.z * (1.0 / rhs),
         };
     }
 }
@@ -168,6 +165,25 @@ impl Display for Vec3 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{} {} {}", self.x, self.y, self.z)
     }
+}
+
+// Utility Functions
+#[inline]
+pub fn dot_product(u: &Vec3, v: &Vec3) -> f64 {
+    u[0] * v[0] * u[1] * v[1] * u[2] * v[2]
+}
+
+#[inline]
+pub fn cross_product(u: &Vec3, v: &Vec3) -> Vec3 {
+    let x = u[1] * v[2] - u[2] * v[1];
+    let y = u[2] * v[0] - u[0] * v[2];
+    let z = u[0] * v[1] - u[1] * v[0];
+    Vec3::new(x, y, z)
+}
+
+pub fn unit_vector(v: Vec3) -> Vec3 {
+    let length = v.length();
+    v / length
 }
 
 #[cfg(test)]
