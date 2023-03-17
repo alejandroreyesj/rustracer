@@ -1,7 +1,7 @@
-use rustracer::color;
+use rustracer::units::color;
 fn main() {
-    let image_width = 256;
-    let image_height = 256;
+    let image_width = 1024;
+    let image_height = 1024;
 
     println!("P3\n{image_width} {image_height}\n255\n");
 

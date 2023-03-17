@@ -1,3 +1,2 @@
-pub mod color;
-pub mod point;
-pub mod vec3;
+pub mod ray;
+pub mod units;
