@@ -1,14 +1,26 @@
+use std::vec;
+
 use rustracer::{
     ray,
+    shapes::sphere::{HitRecord, Sphere},
     units::{
-        color, point,
-        vec3::{self, unit_vector},
+        color,
+        hittable::Hittable,
+        point,
+        vec3::{self},
     },
+    INFINITY,
 };
 fn main() {
     let aspect_ratio = 16.0 / 9.0;
     let image_width = 400;
     let image_height = (image_width as f64 / aspect_ratio) as i32;
+
+    // World
+    let world = vec![
+        Sphere::new(point::Point::new(0.0, 0.0, -1.0), 0.5),
+        Sphere::new(point::Point::new(0.0, -100.5, -1.0), 100.0),
+    ];
     // Camera
     let viewport_height = 2.0;
     let view_width = aspect_ratio * viewport_height;
@@ -28,43 +40,41 @@ fn main() {
         for i in 0..image_width {
             let u = i as f64 / (image_width - 1) as f64;
             let v = j as f64 / (image_height - 1) as f64;
-            let ray = ray::Ray::new(
-                origin,
-                lower_left_corner + horizontal * u + vertical * v - origin,
-            );
-            let color = ray_color(&ray);
+            let ray = ray::Ray::new(origin, lower_left_corner + horizontal * u + vertical * v);
+            let color = ray_color(&ray, &world);
 
             color::write_color(color);
         }
     }
     eprintln!("Done");
 }
-fn ray_color(r: &ray::Ray) -> color::Color {
-    let t = hit_sphere(point::Point::new(0.0, 0.0, -1.0), 0.5, r);
-    if t > 0.0 {
-        let n = unit_vector(r.at(t) - vec3::Vec3::new(0.0, 0.0, -1.0));
-        return color::Color::new(n.x() + 1.0, n.y() + 1.0, n.z() + 1.0) * 0.5;
+fn ray_color<T: Hittable>(r: &ray::Ray, world: &[T]) -> color::Color {
+    let mut rec = HitRecord::default();
+    let hit_anything = hittable_hits(r, 0.0, INFINITY, world, &mut rec);
+    if hit_anything {
+        return (rec.normal() + color::Color::new(1.0, 1.0, 1.0)) * 0.5;
     }
     let unit_direction = vec3::unit_vector(r.direction());
     let t = 0.5 * (unit_direction.y() + 1.0);
     color::Color::new(1.0, 1.0, 1.0) * (1.0 - t) + color::Color::new(0.5, 0.7, 1.0) * t
 }
 
-fn hit_sphere(center: point::Point, radius: f64, r: &ray::Ray) -> f64 {
-    let oc = r.origin() - center;
-    let a = r.direction().length_squared();
-    let half_b = vec3::dot_product(&oc, &(r.direction()));
-    let c = oc.length_squared() - radius * radius;
-    let discriminant = half_b * half_b - a * c;
-    if discriminant < 0.0 {
-        -1.0
-    } else {
-        (-half_b - discriminant.sqrt()) / a
+fn hittable_hits<T: Hittable>(
+    r: &ray::Ray,
+    t_min: f64,
+    t_max: f64,
+    world: &[T],
+    rec: &mut HitRecord,
+) -> bool {
+    let temp_rec = HitRecord::default();
+    let mut hit_anything = false;
+    let mut closest_so_far = t_max;
+    for obj in world.iter() {
+        if obj.hit(r, t_min, closest_so_far).is_some() {
+            hit_anything = true;
+            closest_so_far = rec.t();
+            *rec = temp_rec;
+        }
     }
-}
-
-#[allow(dead_code)]
-fn ppm_image() {
-    let image_width = 1024;
-    let image_height = 1024;
+    hit_anything
 }
