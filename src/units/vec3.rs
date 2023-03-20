@@ -127,6 +127,17 @@ impl Mul<f64> for Vec3 {
         }
     }
 }
+impl Mul<Vec3> for f64 {
+    type Output = Vec3;
+
+    fn mul(self, rhs: Vec3) -> Self::Output {
+        Self::Output {
+            x: self * rhs.x,
+            y: self * rhs.y,
+            z: self * rhs.z,
+        }
+    }
+}
 
 impl MulAssign<f64> for Vec3 {
     fn mul_assign(&mut self, rhs: f64) {
@@ -170,7 +181,7 @@ impl Display for Vec3 {
 // Utility Functions
 #[inline]
 pub fn dot_product(u: &Vec3, v: &Vec3) -> f64 {
-    u[0] * v[0] * u[1] * v[1] * u[2] * v[2]
+    u[0] * v[0] + u[1] * v[1] + u[2] * v[2]
 }
 
 #[inline]

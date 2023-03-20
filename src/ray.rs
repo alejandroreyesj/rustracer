@@ -1,7 +1,7 @@
 use crate::units::{point::Point, vec3::Vec3};
 
 #[derive(Debug, Default)]
-struct Ray {
+pub struct Ray {
     origin: Point,
     direction: Vec3,
 }
@@ -11,7 +11,7 @@ impl Ray {
         Self { origin, direction }
     }
 
-    pub fn point(&self) -> Point {
+    pub fn origin(&self) -> Point {
         self.origin
     }
 
