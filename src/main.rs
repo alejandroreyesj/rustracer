@@ -2,14 +2,7 @@ use std::vec;
 
 use rustracer::{
     ray,
-    shapes::sphere::{HitRecord, Sphere},
-    units::{
-        color,
-        hittable::Hittable,
-        point,
-        vec3::{self},
-    },
-    INFINITY,
+    units::{color, point, vec3},
 };
 fn main() {
     let aspect_ratio = 16.0 / 9.0;
@@ -48,33 +41,26 @@ fn main() {
     }
     eprintln!("Done");
 }
-fn ray_color<T: Hittable>(r: &ray::Ray, world: &[T]) -> color::Color {
-    let mut rec = HitRecord::default();
-    let hit_anything = hittable_hits(r, 0.0, INFINITY, world, &mut rec);
-    if hit_anything {
-        return (rec.normal() + color::Color::new(1.0, 1.0, 1.0)) * 0.5;
+fn ray_color(r: &ray::Ray) -> color::Color {
+    if hit_sphere(point::Point::new(0.0, 0.0, -1.0), 0.5, r) {
+        return color::Color::new(1.0, 0.0, 0.0);
     }
     let unit_direction = vec3::unit_vector(r.direction());
     let t = 0.5 * (unit_direction.y() + 1.0);
     color::Color::new(1.0, 1.0, 1.0) * (1.0 - t) + color::Color::new(0.5, 0.7, 1.0) * t
 }
 
-fn hittable_hits<T: Hittable>(
-    r: &ray::Ray,
-    t_min: f64,
-    t_max: f64,
-    world: &[T],
-    rec: &mut HitRecord,
-) -> bool {
-    let temp_rec = HitRecord::default();
-    let mut hit_anything = false;
-    let mut closest_so_far = t_max;
-    for obj in world.iter() {
-        if obj.hit(r, t_min, closest_so_far).is_some() {
-            hit_anything = true;
-            closest_so_far = rec.t();
-            *rec = temp_rec;
-        }
-    }
-    hit_anything
+fn hit_sphere(center: point::Point, radius: f64, r: &ray::Ray) -> bool {
+    let oc = r.origin() - center;
+    let a = vec3::dot_product(&r.direction(), &r.direction());
+    let b = vec3::dot_product(&oc, &(r.direction())) * 2.0;
+    let c = vec3::dot_product(&oc, &oc) - radius * radius;
+    let discriminant = b * b - 4.0 * a * c;
+    discriminant > 0.0
+}
+
+#[allow(dead_code)]
+fn ppm_image() {
+    let image_width = 1024;
+    let image_height = 1024;
 }
