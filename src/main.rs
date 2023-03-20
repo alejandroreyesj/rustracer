@@ -1,6 +1,9 @@
 use rustracer::{
     ray,
-    units::{color, point, vec3},
+    units::{
+        color, point,
+        vec3::{self, unit_vector},
+    },
 };
 fn main() {
     let aspect_ratio = 16.0 / 9.0;
@@ -37,21 +40,27 @@ fn main() {
     eprintln!("Done");
 }
 fn ray_color(r: &ray::Ray) -> color::Color {
-    if hit_sphere(point::Point::new(0.0, 0.0, -1.0), 0.5, r) {
-        return color::Color::new(1.0, 0.0, 0.0);
+    let t = hit_sphere(point::Point::new(0.0, 0.0, -1.0), 0.5, r);
+    if t > 0.0 {
+        let n = unit_vector(r.at(t) - vec3::Vec3::new(0.0, 0.0, -1.0));
+        return color::Color::new(n.x() + 1.0, n.y() + 1.0, n.z() + 1.0) * 0.5;
     }
     let unit_direction = vec3::unit_vector(r.direction());
     let t = 0.5 * (unit_direction.y() + 1.0);
     color::Color::new(1.0, 1.0, 1.0) * (1.0 - t) + color::Color::new(0.5, 0.7, 1.0) * t
 }
 
-fn hit_sphere(center: point::Point, radius: f64, r: &ray::Ray) -> bool {
+fn hit_sphere(center: point::Point, radius: f64, r: &ray::Ray) -> f64 {
     let oc = r.origin() - center;
-    let a = vec3::dot_product(&r.direction(), &r.direction());
-    let b = vec3::dot_product(&oc, &(r.direction())) * 2.0;
-    let c = vec3::dot_product(&oc, &oc) - radius * radius;
-    let discriminant = b * b - 4.0 * a * c;
-    discriminant > 0.0
+    let a = r.direction().length_squared();
+    let half_b = vec3::dot_product(&oc, &(r.direction()));
+    let c = oc.length_squared() - radius * radius;
+    let discriminant = half_b * half_b - a * c;
+    if discriminant < 0.0 {
+        -1.0
+    } else {
+        (-half_b - discriminant.sqrt()) / a
+    }
 }
 
 #[allow(dead_code)]
