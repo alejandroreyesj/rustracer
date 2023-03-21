@@ -1,5 +1,5 @@
 pub mod ray;
-pub mod shapes;
+pub mod sphere;
 pub mod units;
 
 //import infinity for f64 and pi

@@ -1,19 +1,23 @@
-use std::vec;
-
 use rustracer::{
-    ray,
-    units::{color, point, vec3},
+    ray::{self, Hittables},
+    sphere::Sphere,
+    units::{
+        color,
+        point::{self, Point},
+        vec3::{self, unit_vector},
+    },
 };
+
+use rand::{thread_rng, Rng};
 fn main() {
     let aspect_ratio = 16.0 / 9.0;
     let image_width = 400;
     let image_height = (image_width as f64 / aspect_ratio) as i32;
 
     // World
-    let world = vec![
-        Sphere::new(point::Point::new(0.0, 0.0, -1.0), 0.5),
-        Sphere::new(point::Point::new(0.0, -100.5, -1.0), 100.0),
-    ];
+    let mut world = Hittables::new();
+    world.add(Box::new(Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5)));
+    world.add(Box::new(Sphere::new(Point::new(0.0, -100.5, -1.0), 100.0)));
     // Camera
     let viewport_height = 2.0;
     let view_width = aspect_ratio * viewport_height;
@@ -41,26 +45,30 @@ fn main() {
     }
     eprintln!("Done");
 }
-fn ray_color(r: &ray::Ray) -> color::Color {
-    if hit_sphere(point::Point::new(0.0, 0.0, -1.0), 0.5, r) {
-        return color::Color::new(1.0, 0.0, 0.0);
+
+fn random_f64() -> f64 {
+    let mut rng = thread_rng();
+    rng.gen()
+}
+
+fn ray_color(r: &ray::Ray, world: &Hittables) -> color::Color {
+    if let Some(rec) = world.hit(r, 0.0, std::f64::MAX) {
+        return 0.5 * (rec.normal + color::Color::new(1.0, 1.0, 1.0));
     }
-    let unit_direction = vec3::unit_vector(r.direction());
+    let unit_direction = unit_vector(r.direction());
     let t = 0.5 * (unit_direction.y() + 1.0);
     color::Color::new(1.0, 1.0, 1.0) * (1.0 - t) + color::Color::new(0.5, 0.7, 1.0) * t
 }
 
-fn hit_sphere(center: point::Point, radius: f64, r: &ray::Ray) -> bool {
-    let oc = r.origin() - center;
-    let a = vec3::dot_product(&r.direction(), &r.direction());
-    let b = vec3::dot_product(&oc, &(r.direction())) * 2.0;
-    let c = vec3::dot_product(&oc, &oc) - radius * radius;
-    let discriminant = b * b - 4.0 * a * c;
-    discriminant > 0.0
-}
-
-#[allow(dead_code)]
-fn ppm_image() {
-    let image_width = 1024;
-    let image_height = 1024;
-}
+// fn hit_sphere(center: point::Point, radius: f64, r: &ray::Ray) -> f64 {
+//     let oc = r.origin() - center;
+//     let a = r.direction().length_squared();
+//     let half_b = vec3::dot_product(&oc, &r.direction());
+//     let c = oc.length_squared() - radius * radius;
+//     let discriminant = half_b * half_b - a * c;
+//     if discriminant < 0.0 {
+//         -1.0
+//     } else {
+//         (-half_b - discriminant.sqrt()) / a
+//     }
+// }
