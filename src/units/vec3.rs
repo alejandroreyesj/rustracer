@@ -1,3 +1,4 @@
+use rand::{thread_rng, Rng};
 use std::{
     fmt::Display,
     ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub, SubAssign},
@@ -33,6 +34,27 @@ impl Vec3 {
 
     pub fn length(&self) -> f64 {
         self.length_squared().sqrt()
+    }
+    pub fn random() -> Self {
+        Self::new(random_f64(), random_f64(), random_f64())
+    }
+
+    pub fn random_with_range(min: f64, max: f64) -> Self {
+        Self::new(
+            random_f64_range(min, max),
+            random_f64_range(min, max),
+            random_f64_range(min, max),
+        )
+    }
+}
+
+pub fn random_in_unit_sphere() -> Vec3 {
+    loop {
+        let p = Vec3::random_with_range(-1.0, 1.0);
+        if p.length_squared() >= 1.0 {
+            continue;
+        }
+        return p;
     }
 }
 
@@ -295,5 +317,27 @@ mod tests {
         let length_squared = (v1.x).powi(2) + (v1.y).powi(2) + (v1.z).powi(2);
         let length = length_squared.sqrt();
         assert_eq!(length, v1.length())
+    }
+}
+
+pub fn random_f64() -> f64 {
+    let mut rng = thread_rng();
+    rng.gen()
+}
+pub fn random_f64_range(min: f64, max: f64) -> f64 {
+    let mut rng = thread_rng();
+    rng.gen_range(min..max)
+}
+
+#[cfg(test)]
+mod test {
+
+    use super::*;
+
+    #[test]
+    fn random_f64_range_test() {
+        let mut rng = thread_rng();
+        let random_number = dbg!(rng.gen_range(0.0..10.0));
+        assert_eq!(random_number, random_f64_range(0.0, 1.0));
     }
 }

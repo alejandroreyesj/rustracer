@@ -1,20 +1,20 @@
 use rustracer::{
     camera::Camera,
-    ray::{self, Hittables},
+    ray::{self, Hittables, Ray},
     sphere::Sphere,
     units::{
         color::{write_color, Color},
         point::Point,
-        vec3::unit_vector,
+        vec3::{random_f64, random_in_unit_sphere, unit_vector},
     },
 };
 
-use rand::{thread_rng, Rng};
 fn main() {
     let aspect_ratio = 16.0 / 9.0;
     let image_width = 400;
     let image_height = (image_width as f64 / aspect_ratio) as i32;
     let samples_per_pixel = 100;
+    let max_depth = 50;
 
     // World
     let mut world = Hittables::new();
@@ -34,7 +34,7 @@ fn main() {
                 let u = (i as f64 + random_f64()) / (image_width - 1) as f64;
                 let v = (j as f64 + random_f64()) / (image_height - 1) as f64;
                 let ray = camera.get_ray(u, v);
-                pixel_color += ray_color(&ray, &world);
+                pixel_color += ray_color(&ray, &world, max_depth);
             }
 
             write_color(pixel_color, samples_per_pixel)
@@ -43,14 +43,13 @@ fn main() {
     eprintln!("Done");
 }
 
-fn random_f64() -> f64 {
-    let mut rng = thread_rng();
-    rng.gen()
-}
-
-fn ray_color(r: &ray::Ray, world: &Hittables) -> Color {
+fn ray_color(r: &ray::Ray, world: &Hittables, depth: i32) -> Color {
+    if depth < 0 {
+        return Color::new(0.0, 0.0, 0.0);
+    }
     if let Some(rec) = world.hit(r, 0.0, std::f64::MAX) {
-        return 0.5 * (rec.normal + Color::new(1.0, 1.0, 1.0));
+        let target = rec.point + rec.normal + random_in_unit_sphere();
+        return 0.5 * ray_color(&Ray::new(rec.point, target - rec.point), world, depth - 1);
     }
     let unit_direction = unit_vector(r.direction());
     let t = 0.5 * (unit_direction.y() + 1.0);

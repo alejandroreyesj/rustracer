@@ -8,14 +8,10 @@ pub fn write_color(pixel_color: Color, samples_per_pixel: i64) {
     let mut b = pixel_color.z();
     //Divide color by samples_per_pixel
     let scale = 1.0 / samples_per_pixel as f64;
-    r *= scale;
-    g *= scale;
-    b *= scale;
-    r *= 255.999;
-    g *= 255.999; // let x = (255.999 * pixel_color.x()) as i64;
-    b *= 255.999;
-    // let y = (255.999 * pixel_color.y()) as i64;
-    // let z = (255.999 * pixel_color.z()) as i64;
+    r *= scale * 256.0 * clamp(r, 0.0, 0.999);
+    g *= scale * 256.0 * clamp(r, 0.0, 0.999);
+    b *= scale * 256.0 * clamp(r, 0.0, 0.999);
+
     println!("{} {} {}", r as i64, g as i64, b as i64);
 }
 
