@@ -1,5 +1,5 @@
 use crate::ray::{HitRecord, Ray};
-use crate::units::vec3::{random_in_unit_sphere, unit_vector};
+use crate::units::vec3::{random_in_unit_sphere, refract, unit_vector};
 use crate::units::{
     color::Color,
     vec3::{random_unit_vector, reflect},
@@ -8,7 +8,7 @@ use crate::units::{
 pub enum Material {
     Lambertian(Lambertian),
     Metal(Metal),
-    // Dielectric(Dielectric),
+    Dielectric(Dielectric),
 }
 
 #[derive(Copy, Clone, Debug, Default)]
@@ -33,6 +33,17 @@ impl Metal {
     }
 }
 
+#[derive(Copy, Clone, Debug, Default)]
+pub struct Dielectric {
+    ir: f64,
+}
+
+impl Dielectric {
+    pub fn new(ir: f64) -> Self {
+        Self { ir }
+    }
+}
+
 impl Material {
     pub fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> (Color, Ray) {
         match self {
@@ -50,7 +61,15 @@ impl Material {
                 let scattered = Ray::new(rec.point, reflected + m.fuzz * random_in_unit_sphere());
                 let attenuation = m.albedo;
                 (attenuation, scattered)
-            } // Material::Dielectric(d) => d.scatter(r_in, rec),
+            }
+            Material::Dielectric(d) => {
+                let attennuation = Color::new(1.0, 1.0, 1.0);
+                let refraction_ratio = if rec.front_face { 1.0 / d.ir } else { d.ir };
+                let unit_direction = unit_vector(r_in.direction());
+                let refracted = refract(&unit_direction, &rec.normal, refraction_ratio);
+                let scattered = Ray::new(rec.point, refracted);
+                (attennuation, scattered)
+            }
         }
     }
 }

@@ -56,6 +56,13 @@ impl Vec3 {
 pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
     *v - *n * dot_product(v, n) * 2.0
 }
+
+pub fn refract(uv: &Vec3, n: &Vec3, etai_over_etat: f64) -> Vec3 {
+    let cos_theta = dot_product(&-*uv, n).min(1.0);
+    let r_out_perp = etai_over_etat * (*uv + *n * cos_theta);
+    let r_out_parallel = *n * (1.0 - r_out_perp.length_squared()).abs().sqrt();
+    r_out_perp + r_out_parallel
+}
 impl Neg for Vec3 {
     type Output = Self;
 
