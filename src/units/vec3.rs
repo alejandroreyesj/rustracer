@@ -46,18 +46,16 @@ impl Vec3 {
             random_f64_range(min, max),
         )
     }
-}
 
-pub fn random_in_unit_sphere() -> Vec3 {
-    loop {
-        let p = Vec3::random_with_range(-1.0, 1.0);
-        if p.length_squared() >= 1.0 {
-            continue;
-        }
-        return p;
+    pub fn near_zero(&self) -> bool {
+        let s = 1e-8;
+        self.x.abs() < s && self.y.abs() < s && self.z.abs() < s
     }
 }
 
+pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
+    *v - *n * dot_product(v, n) * 2.0
+}
 impl Neg for Vec3 {
     type Output = Self;
 
@@ -149,6 +147,17 @@ impl Mul<f64> for Vec3 {
         }
     }
 }
+impl Mul<Vec3> for Vec3 {
+    type Output = Self;
+
+    fn mul(self, rhs: Vec3) -> Self::Output {
+        Self {
+            x: self.x * rhs.x,
+            y: self.y * rhs.y,
+            z: self.z * rhs.z,
+        }
+    }
+}
 impl Mul<Vec3> for f64 {
     type Output = Vec3;
 
@@ -217,6 +226,37 @@ pub fn cross_product(u: &Vec3, v: &Vec3) -> Vec3 {
 pub fn unit_vector(v: Vec3) -> Vec3 {
     let length = v.length();
     v / length
+}
+pub fn random_in_unit_sphere() -> Vec3 {
+    loop {
+        let p = Vec3::random_with_range(-1.0, 1.0);
+        if p.length_squared() >= 1.0 {
+            continue;
+        }
+        return p;
+    }
+}
+
+pub fn random_unit_vector() -> Vec3 {
+    unit_vector(random_in_unit_sphere())
+}
+
+pub fn random_in_hemisphere(normal: &Vec3) -> Vec3 {
+    let in_unit_sphere = random_in_unit_sphere();
+    if dot_product(&in_unit_sphere, normal) > 0.0 {
+        in_unit_sphere
+    } else {
+        -in_unit_sphere
+    }
+}
+
+pub fn random_f64() -> f64 {
+    let mut rng = thread_rng();
+    rng.gen()
+}
+pub fn random_f64_range(min: f64, max: f64) -> f64 {
+    let mut rng = thread_rng();
+    rng.gen_range(min..max)
 }
 
 #[cfg(test)]
@@ -317,27 +357,5 @@ mod tests {
         let length_squared = (v1.x).powi(2) + (v1.y).powi(2) + (v1.z).powi(2);
         let length = length_squared.sqrt();
         assert_eq!(length, v1.length())
-    }
-}
-
-pub fn random_f64() -> f64 {
-    let mut rng = thread_rng();
-    rng.gen()
-}
-pub fn random_f64_range(min: f64, max: f64) -> f64 {
-    let mut rng = thread_rng();
-    rng.gen_range(min..max)
-}
-
-#[cfg(test)]
-mod test {
-
-    use super::*;
-
-    #[test]
-    fn random_f64_range_test() {
-        let mut rng = thread_rng();
-        let random_number = dbg!(rng.gen_range(0.0..10.0));
-        assert_eq!(random_number, random_f64_range(0.0, 1.0));
     }
 }

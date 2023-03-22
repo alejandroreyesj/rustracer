@@ -1,11 +1,12 @@
 use rustracer::{
     camera::Camera,
+    material::{Lambertian, Material, Metal},
     ray::{self, Hittables, Ray},
     sphere::Sphere,
     units::{
         color::{write_color, Color},
         point::Point,
-        vec3::{random_f64, random_in_unit_sphere, unit_vector},
+        vec3::{random_f64, random_in_hemisphere, unit_vector},
     },
 };
 
@@ -18,8 +19,32 @@ fn main() {
 
     // World
     let mut world = Hittables::new();
-    world.add(Box::new(Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5)));
-    world.add(Box::new(Sphere::new(Point::new(0.0, -100.5, -1.0), 100.0)));
+
+    let material_ground = Material::Lambertian(Lambertian::new(Color::new(0.8, 0.8, 0.0)));
+    let material_center = Material::Lambertian(Lambertian::new(Color::new(0.7, 0.3, 0.3)));
+    let material_left = Material::Metal(Metal::new(Color::new(0.8, 0.8, 0.8)));
+    let material_right = Material::Metal(Metal::new(Color::new(0.8, 0.6, 0.2)));
+
+    world.add(Box::new(Sphere::new(
+        Point::new(0.0, 0.0, -1.0),
+        0.5,
+        material_center,
+    )));
+    world.add(Box::new(Sphere::new(
+        Point::new(0.0, -100.5, -1.0),
+        100.0,
+        material_ground,
+    )));
+    world.add(Box::new(Sphere::new(
+        Point::new(-1.0, 0.0, -1.0),
+        0.5,
+        material_left,
+    )));
+    world.add(Box::new(Sphere::new(
+        Point::new(1.0, 0.0, -1.0),
+        0.5,
+        material_right,
+    )));
     // Camera
     let camera = Camera::new();
 
@@ -47,9 +72,9 @@ fn ray_color(r: &ray::Ray, world: &Hittables, depth: i32) -> Color {
     if depth < 0 {
         return Color::new(0.0, 0.0, 0.0);
     }
-    if let Some(rec) = world.hit(r, 0.001, std::f64::MAX) {
-        let target = rec.point + rec.normal + random_in_unit_sphere();
-        return 0.5 * ray_color(&Ray::new(rec.point, target - rec.point), world, depth - 1);
+    if let Some(rec) = world.hit(r, 0.001, f64::INFINITY) {
+        let (attenuation, scattered) = rec.material.scatter(r, &rec);
+        return ray_color(&scattered, world, depth - 1) * attenuation;
     }
     let unit_direction = unit_vector(r.direction());
     let t = 0.5 * (unit_direction.y() + 1.0);

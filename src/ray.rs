@@ -1,6 +1,9 @@
-use crate::units::{
-    point::Point,
-    vec3::{dot_product, Vec3},
+use crate::{
+    material::{Lambertian, Material},
+    units::{
+        point::Point,
+        vec3::{dot_product, Vec3},
+    },
 };
 
 #[derive(Debug, Default)]
@@ -34,6 +37,7 @@ pub trait Hittable {
 pub struct HitRecord {
     pub point: Point,
     pub normal: Vec3,
+    pub material: Material,
     pub t: f64,
     pub front_face: bool,
 }
@@ -44,6 +48,7 @@ impl HitRecord {
             point,
             normal,
             t,
+            material: Material::Lambertian(Lambertian::default()),
             front_face: false,
         }
     }
