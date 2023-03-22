@@ -47,7 +47,7 @@ fn ray_color(r: &ray::Ray, world: &Hittables, depth: i32) -> Color {
     if depth < 0 {
         return Color::new(0.0, 0.0, 0.0);
     }
-    if let Some(rec) = world.hit(r, 0.0, std::f64::MAX) {
+    if let Some(rec) = world.hit(r, 0.001, std::f64::MAX) {
         let target = rec.point + rec.normal + random_in_unit_sphere();
         return 0.5 * ray_color(&Ray::new(rec.point, target - rec.point), world, depth - 1);
     }
@@ -55,16 +55,3 @@ fn ray_color(r: &ray::Ray, world: &Hittables, depth: i32) -> Color {
     let t = 0.5 * (unit_direction.y() + 1.0);
     Color::new(1.0, 1.0, 1.0) * (1.0 - t) + Color::new(0.5, 0.7, 1.0) * t
 }
-
-// fn hit_sphere(center: point::Point, radius: f64, r: &ray::Ray) -> f64 {
-//     let oc = r.origin() - center;
-//     let a = r.direction().length_squared();
-//     let half_b = vec3::dot_product(&oc, &r.direction());
-//     let c = oc.length_squared() - radius * radius;
-//     let discriminant = half_b * half_b - a * c;
-//     if discriminant < 0.0 {
-//         -1.0
-//     } else {
-//         (-half_b - discriminant.sqrt()) / a
-//     }
-// }
