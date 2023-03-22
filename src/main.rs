@@ -1,36 +1,27 @@
-use std::vec;
-
 use rustracer::{
-    ray,
-    shapes::sphere::{HitRecord, Sphere},
+    camera::Camera,
+    ray::{self, Hittables, Ray},
+    sphere::Sphere,
     units::{
-        color,
-        hittable::Hittable,
-        point,
-        vec3::{self},
+        color::{write_color, Color},
+        point::Point,
+        vec3::{random_f64, random_in_unit_sphere, unit_vector},
     },
-    INFINITY,
 };
+
 fn main() {
     let aspect_ratio = 16.0 / 9.0;
     let image_width = 400;
     let image_height = (image_width as f64 / aspect_ratio) as i32;
+    let samples_per_pixel = 100;
+    let max_depth = 50;
 
     // World
-    let world = vec![
-        Sphere::new(point::Point::new(0.0, 0.0, -1.0), 0.5),
-        Sphere::new(point::Point::new(0.0, -100.5, -1.0), 100.0),
-    ];
+    let mut world = Hittables::new();
+    world.add(Box::new(Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5)));
+    world.add(Box::new(Sphere::new(Point::new(0.0, -100.5, -1.0), 100.0)));
     // Camera
-    let viewport_height = 2.0;
-    let view_width = aspect_ratio * viewport_height;
-    let focal_length = 1.0;
-
-    let origin = point::Point::new(0.0, 0.0, 0.0);
-    let horizontal = vec3::Vec3::new(view_width, 0.0, 0.0);
-    let vertical = vec3::Vec3::new(0.0, viewport_height, 0.0);
-    let lower_left_corner =
-        origin - horizontal / 2.0 - vertical / 2.0 - vec3::Vec3::new(0.0, 0.0, focal_length);
+    let camera = Camera::new();
 
     // Render
     println!("P3\n{image_width} {image_height}\n255\n");
@@ -38,43 +29,42 @@ fn main() {
     for j in (0..image_height).rev() {
         eprint!("\rScanlines remaining: {j} ");
         for i in 0..image_width {
-            let u = i as f64 / (image_width - 1) as f64;
-            let v = j as f64 / (image_height - 1) as f64;
-            let ray = ray::Ray::new(origin, lower_left_corner + horizontal * u + vertical * v);
-            let color = ray_color(&ray, &world);
+            let mut pixel_color = Color::new(0.0, 0.0, 0.0);
+            for _s in 0..samples_per_pixel {
+                let u = (i as f64 + random_f64()) / (image_width - 1) as f64;
+                let v = (j as f64 + random_f64()) / (image_height - 1) as f64;
+                let ray = camera.get_ray(u, v);
+                pixel_color += ray_color(&ray, &world, max_depth);
+            }
 
-            color::write_color(color);
+            write_color(pixel_color, samples_per_pixel)
         }
     }
     eprintln!("Done");
 }
-fn ray_color<T: Hittable>(r: &ray::Ray, world: &[T]) -> color::Color {
-    let mut rec = HitRecord::default();
-    let hit_anything = hittable_hits(r, 0.0, INFINITY, world, &mut rec);
-    if hit_anything {
-        return (rec.normal() + color::Color::new(1.0, 1.0, 1.0)) * 0.5;
+
+fn ray_color(r: &ray::Ray, world: &Hittables, depth: i32) -> Color {
+    if depth < 0 {
+        return Color::new(0.0, 0.0, 0.0);
     }
-    let unit_direction = vec3::unit_vector(r.direction());
+    if let Some(rec) = world.hit(r, 0.0, std::f64::MAX) {
+        let target = rec.point + rec.normal + random_in_unit_sphere();
+        return 0.5 * ray_color(&Ray::new(rec.point, target - rec.point), world, depth - 1);
+    }
+    let unit_direction = unit_vector(r.direction());
     let t = 0.5 * (unit_direction.y() + 1.0);
-    color::Color::new(1.0, 1.0, 1.0) * (1.0 - t) + color::Color::new(0.5, 0.7, 1.0) * t
+    Color::new(1.0, 1.0, 1.0) * (1.0 - t) + Color::new(0.5, 0.7, 1.0) * t
 }
 
-fn hittable_hits<T: Hittable>(
-    r: &ray::Ray,
-    t_min: f64,
-    t_max: f64,
-    world: &[T],
-    rec: &mut HitRecord,
-) -> bool {
-    let temp_rec = HitRecord::default();
-    let mut hit_anything = false;
-    let mut closest_so_far = t_max;
-    for obj in world.iter() {
-        if obj.hit(r, t_min, closest_so_far).is_some() {
-            hit_anything = true;
-            closest_so_far = rec.t();
-            *rec = temp_rec;
-        }
-    }
-    hit_anything
-}
+// fn hit_sphere(center: point::Point, radius: f64, r: &ray::Ray) -> f64 {
+//     let oc = r.origin() - center;
+//     let a = r.direction().length_squared();
+//     let half_b = vec3::dot_product(&oc, &r.direction());
+//     let c = oc.length_squared() - radius * radius;
+//     let discriminant = half_b * half_b - a * c;
+//     if discriminant < 0.0 {
+//         -1.0
+//     } else {
+//         (-half_b - discriminant.sqrt()) / a
+//     }
+// }
