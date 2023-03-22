@@ -6,7 +6,7 @@ use rustracer::{
     units::{
         color::{write_color, Color},
         point::Point,
-        vec3::{random_f64, unit_vector},
+        vec3::{random_f64, unit_vector, Vec3},
     },
     PI,
 };
@@ -21,50 +21,50 @@ fn main() {
     // World
     let mut world = Hittables::new();
     let r = (PI / 4.0).cos();
-    // let material_ground = Material::Lambertian(Lambertian::new(Color::new(0.8, 0.8, 0.0)));
-    // let material_center = Material::Lambertian(Lambertian::new(Color::new(0.1, 0.2, 0.5)));
-    // let material_left = Material::Dielectric(Dielectric::new(1.5));
-    // let material_right = Material::Metal(Metal::new(Color::new(0.8, 0.6, 0.2), 1.0));
-    let material_left = Material::Lambertian(Lambertian::new(Color::new(0.0, 0.0, 1.0)));
-    let material_right = Material::Lambertian(Lambertian::new(Color::new(1.0, 0.0, 0.0)));
+    let material_ground = Material::Lambertian(Lambertian::new(Color::new(0.8, 0.8, 0.0)));
+    let material_center = Material::Lambertian(Lambertian::new(Color::new(0.1, 0.2, 0.5)));
+    let material_left = Material::Dielectric(Dielectric::new(1.5));
+    let material_right = Material::Metal(Metal::new(Color::new(0.8, 0.6, 0.2), 1.0));
 
-    // world.add(Box::new(Sphere::new(
-    //     Point::new(0.0, 0.0, -1.0),
-    //     0.5,
-    //     material_center,
-    // )));
-    // world.add(Box::new(Sphere::new(
-    //     Point::new(0.0, -100.5, -1.0),
-    //     100.0,
-    //     material_ground,
-    // )));
-    // world.add(Box::new(Sphere::new(
-    //     Point::new(-1.0, 0.0, -1.0),
-    //     -0.4,
-    //     material_left,
-    // )));
-    // world.add(Box::new(Sphere::new(
-    //     Point::new(-1.0, 0.0, -1.0),
-    //     0.5,
-    //     material_left,
-    // )));
-    // world.add(Box::new(Sphere::new(
-    //     Point::new(1.0, 0.0, -1.0),
-    //     0.5,
-    //     material_right,
-    // )));
     world.add(Box::new(Sphere::new(
-        Point::new(-r, 0.0, -1.0),
-        r,
+        Point::new(0.0, 0.0, -1.0),
+        0.5,
+        material_center,
+    )));
+    world.add(Box::new(Sphere::new(
+        Point::new(0.0, -100.5, -1.0),
+        100.0,
+        material_ground,
+    )));
+    world.add(Box::new(Sphere::new(
+        Point::new(-1.0, 0.0, -1.0),
+        -0.4,
         material_left,
     )));
     world.add(Box::new(Sphere::new(
-        Point::new(r, 0.0, -1.0),
-        r,
+        Point::new(-1.0, 0.0, -1.0),
+        0.5,
+        material_left,
+    )));
+    world.add(Box::new(Sphere::new(
+        Point::new(1.0, 0.0, -1.0),
+        0.5,
         material_right,
     )));
     // Camera
-    let camera = Camera::new(90.0, aspect_ratio);
+    // let camera = Camera::new(
+    //     Point::new(-2.0, 2.0, 1.0),
+    //     Point::new(0.0, 0.0, -1.0),
+    //     Vec3::new(0.0, 1.0, 0.0),
+    //     20.0,
+    //     aspect_ratio,
+    // );
+    // Big Aperture
+    let lookfrom = Point::new(3.0, 3.0, 2.0);
+    let lookat = Point::new(0.0, 0.0, -1.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let focus_dist = (lookfrom - lookat).length();
+    let camera = Camera::new(lookfrom, lookat, vup, 20.0, aspect_ratio, 2.0, focus_dist);
 
     // Render
     println!("P3\n{image_width} {image_height}\n255\n");

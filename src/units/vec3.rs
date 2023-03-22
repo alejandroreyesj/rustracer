@@ -245,6 +245,20 @@ pub fn random_in_hemisphere(normal: &Vec3) -> Vec3 {
     }
 }
 
+pub fn random_in_unit_disk() -> Vec3 {
+    loop {
+        let p = Vec3::new(
+            random_f64_range(-1.0, 1.0),
+            random_f64_range(-1.0, 1.0),
+            0.0,
+        );
+        if p.length_squared() >= 1.0 {
+            continue;
+        }
+        return p;
+    }
+}
+
 pub fn random_f64() -> f64 {
     let mut rng = thread_rng();
     rng.gen()

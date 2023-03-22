@@ -20,4 +20,7 @@
 ![16](./images/raytrace_sphere_hollow_glass.png)
 ![17](./images/raytrace_sphere_neg_radius.png)
 ![18](./images/raytrace_sphere_wide_fov.png)
+![19](./images/raytrace_sphere_camera_angle.png)
+![20](./images/raytrace_sphere_camera_angle_20.png)
+![21](./images/raytrace_sphere_large_aperture.png)
 
