@@ -15,30 +15,24 @@ impl Vec3 {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Self { x, y, z }
     }
-
     pub fn x(&self) -> f64 {
         self.x
     }
-
     pub fn y(&self) -> f64 {
         self.y
     }
-
     pub fn z(&self) -> f64 {
         self.z
     }
-
     pub fn length_squared(&self) -> f64 {
         (self.x).powi(2) + (self.y).powi(2) + (self.z).powi(2)
     }
-
     pub fn length(&self) -> f64 {
         self.length_squared().sqrt()
     }
     pub fn random() -> Self {
         Self::new(random_f64(), random_f64(), random_f64())
     }
-
     pub fn random_with_range(min: f64, max: f64) -> Self {
         Self::new(
             random_f64_range(min, max),
@@ -46,7 +40,6 @@ impl Vec3 {
             random_f64_range(min, max),
         )
     }
-
     pub fn near_zero(&self) -> bool {
         let s = 1e-8;
         self.x.abs() < s && self.y.abs() < s && self.z.abs() < s
@@ -58,11 +51,13 @@ pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
 }
 
 pub fn refract(uv: &Vec3, n: &Vec3, etai_over_etat: f64) -> Vec3 {
-    let cos_theta = dot_product(&-*uv, n).min(1.0);
+    let neg_uv = *uv * -1.0;
+    let cos_theta = dot_product(&neg_uv, n).min(1.0);
     let r_out_perp = etai_over_etat * (*uv + *n * cos_theta);
-    let r_out_parallel = *n * (1.0 - r_out_perp.length_squared()).abs().sqrt();
+    let r_out_parallel = *n * ((1.0 - r_out_perp.length_squared()).abs().sqrt() * -1.0);
     r_out_perp + r_out_parallel
 }
+
 impl Neg for Vec3 {
     type Output = Self;
 
@@ -120,7 +115,6 @@ impl AddAssign for Vec3 {
         }
     }
 }
-
 impl Sub for Vec3 {
     type Output = Self;
 
@@ -132,7 +126,6 @@ impl Sub for Vec3 {
         }
     }
 }
-
 impl SubAssign for Vec3 {
     fn sub_assign(&mut self, rhs: Self) {
         *self = Self {
@@ -142,7 +135,6 @@ impl SubAssign for Vec3 {
         }
     }
 }
-
 impl Mul<f64> for Vec3 {
     type Output = Self;
 
@@ -176,7 +168,6 @@ impl Mul<Vec3> for f64 {
         }
     }
 }
-
 impl MulAssign<f64> for Vec3 {
     fn mul_assign(&mut self, rhs: f64) {
         *self = Self {
@@ -186,7 +177,6 @@ impl MulAssign<f64> for Vec3 {
         }
     }
 }
-
 impl Div<f64> for Vec3 {
     type Output = Self;
 
@@ -198,7 +188,6 @@ impl Div<f64> for Vec3 {
         }
     }
 }
-
 impl DivAssign<f64> for Vec3 {
     fn div_assign(&mut self, rhs: f64) {
         *self = Self {
@@ -208,7 +197,6 @@ impl DivAssign<f64> for Vec3 {
         };
     }
 }
-
 impl Display for Vec3 {
     #[inline]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

@@ -1,5 +1,5 @@
 use crate::ray::{HitRecord, Ray};
-use crate::units::vec3::{random_in_unit_sphere, refract, unit_vector};
+use crate::units::vec3::{dot_product, random_in_unit_sphere, refract, unit_vector};
 use crate::units::{
     color::Color,
     vec3::{random_unit_vector, reflect},
@@ -66,8 +66,16 @@ impl Material {
                 let attennuation = Color::new(1.0, 1.0, 1.0);
                 let refraction_ratio = if rec.front_face { 1.0 / d.ir } else { d.ir };
                 let unit_direction = unit_vector(r_in.direction());
-                let refracted = refract(&unit_direction, &rec.normal, refraction_ratio);
-                let scattered = Ray::new(rec.point, refracted);
+                let neg_unit_direction = unit_direction * -1.0;
+                let cos_theta = dot_product(&neg_unit_direction, &rec.normal).min(1.0);
+                let sin_theta = (1.0 - cos_theta.powi(2)).sqrt();
+                let cannot_refract = refraction_ratio * sin_theta > 1.0;
+                let direction = if cannot_refract {
+                    reflect(&unit_direction, &rec.normal)
+                } else {
+                    refract(&unit_direction, &rec.normal, refraction_ratio)
+                };
+                let scattered = Ray::new(rec.point, direction);
                 (attennuation, scattered)
             }
         }
