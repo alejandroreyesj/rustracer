@@ -15,3 +15,5 @@
 ![11](./images/raytrace_sphere_materials.png)
 ![12](./images/raytrace_sphere_metal_fuzz.png)
 ![13](./images/raytrace_sphere_dielectric_refraction.png)
+![14](./images/raytrace_sphere_dielectric_internal_reflection.png)
+![15](./images/raytrace_sphere_dielectric_test.png)
