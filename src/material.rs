@@ -1,5 +1,5 @@
 use crate::ray::{HitRecord, Ray};
-use crate::units::vec3::{dot_product, random_in_unit_sphere, refract, unit_vector};
+use crate::units::vec3::{dot_product, random_f64, random_in_unit_sphere, refract, unit_vector};
 use crate::units::{
     color::Color,
     vec3::{random_unit_vector, reflect},
@@ -42,6 +42,11 @@ impl Dielectric {
     pub fn new(ir: f64) -> Self {
         Self { ir }
     }
+    pub fn reflectance(cosine: f64, ref_idx: f64) -> f64 {
+        let r0 = (1.0 - ref_idx) / (1.0 + ref_idx);
+        let r0 = r0.powi(2);
+        r0 + (1.0 - r0) * (1.0 - cosine).powi(5)
+    }
 }
 
 impl Material {
@@ -70,7 +75,9 @@ impl Material {
                 let cos_theta = dot_product(&neg_unit_direction, &rec.normal).min(1.0);
                 let sin_theta = (1.0 - cos_theta.powi(2)).sqrt();
                 let cannot_refract = refraction_ratio * sin_theta > 1.0;
-                let direction = if cannot_refract {
+                let direction = if cannot_refract
+                    || Dielectric::reflectance(cos_theta, refraction_ratio) > random_f64()
+                {
                     reflect(&unit_direction, &rec.normal)
                 } else {
                     refract(&unit_direction, &rec.normal, refraction_ratio)

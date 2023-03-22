@@ -17,3 +17,7 @@
 ![13](./images/raytrace_sphere_dielectric_refraction.png)
 ![14](./images/raytrace_sphere_dielectric_internal_reflection.png)
 ![15](./images/raytrace_sphere_dielectric_test.png)
+![16](./images/raytrace_sphere_hollow_glass.png)
+![17](./images/raytrace_sphere_neg_radius.png)
+![18](./images/raytrace_sphere_wide_fov.png)
+
