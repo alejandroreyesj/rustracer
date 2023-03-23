@@ -3,11 +3,6 @@ use crate::ray::Ray;
 use crate::units::vec3::{cross_product, random_in_unit_disk, unit_vector};
 use crate::units::{point::Point, vec3::Vec3};
 
-const ASPECT_RATIO: f64 = 16.0 / 9.0;
-const VIEWPORT_HEIGHT: f64 = 2.0;
-const VIEWPORT_WIDTH: f64 = ASPECT_RATIO * VIEWPORT_HEIGHT;
-const FOCAL_LENGTH: f64 = 1.0;
-
 #[derive(Debug, Default)]
 pub struct Camera {
     origin: Point,
