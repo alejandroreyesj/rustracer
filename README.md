@@ -23,4 +23,4 @@
 ![19](./images/raytrace_sphere_camera_angle.png)
 ![20](./images/raytrace_sphere_camera_angle_20.png)
 ![21](./images/raytrace_sphere_large_aperture.png)
-
+![22](./images/raytrace_sphere_final_aperture.png)

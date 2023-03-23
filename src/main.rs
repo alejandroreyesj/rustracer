@@ -1,3 +1,4 @@
+use rayon::prelude::*;
 use rustracer::{
     camera::Camera,
     material::{Dielectric, Lambertian, Material, Metal},
@@ -10,14 +11,13 @@ use rustracer::{
     },
 };
 
-use rayon::prelude::*;
-
 fn main() {
     let aspect_ratio = 3.0 / 2.0;
     let image_width = 1200;
     let image_height = (image_width as f64 / aspect_ratio) as i32;
     let samples_per_pixel = 500;
     let max_depth = 50;
+    let aperture = 0.1;
 
     // World
     let world = random_scene();
@@ -26,7 +26,15 @@ fn main() {
     let lookat = Point::new(0.0, 0.0, 0.0);
     let vup = Vec3::new(0.0, 1.0, 0.0);
     let focus_dist = 10.0;
-    let camera = Camera::new(lookfrom, lookat, vup, 20.0, aspect_ratio, 1.0, focus_dist);
+    let camera = Camera::new(
+        lookfrom,
+        lookat,
+        vup,
+        20.0,
+        aspect_ratio,
+        aperture,
+        focus_dist,
+    );
 
     // Render
     println!("P3\n{image_width} {image_height}\n255\n");
@@ -34,15 +42,18 @@ fn main() {
     for j in (0..image_height).rev() {
         eprint!("\rScanlines remaining: {j} ");
         for i in 0..image_width {
-            let mut pixel_color = Color::new(0.0, 0.0, 0.0);
-            for _s in 0..samples_per_pixel {
-                let u = (i as f64 + random_f64()) / (image_width - 1) as f64;
-                let v = (j as f64 + random_f64()) / (image_height - 1) as f64;
-                let ray = camera.get_ray(u, v);
-                pixel_color += ray_color(&ray, &world, max_depth);
-            }
+            let pixel_color = Color::new(0.0, 0.0, 0.0);
+            let final_color = (0..samples_per_pixel)
+                .into_par_iter()
+                .map(|_| {
+                    let u = (i as f64 + random_f64()) / (image_width - 1) as f64;
+                    let v = (j as f64 + random_f64()) / (image_height - 1) as f64;
+                    let ray = camera.get_ray(u, v);
+                    ray_color(&ray, &world, max_depth)
+                })
+                .reduce(|| pixel_color, |acc, x| acc + x);
 
-            write_color(pixel_color, samples_per_pixel)
+            write_color(final_color, samples_per_pixel)
         }
     }
     eprintln!("Done");
@@ -110,9 +121,9 @@ fn random_scene() -> Hittables {
         1.0,
         material2,
     )));
-    let material3 = Material::Metal(Metal::new(Color::new(4.0, 1.0, 0.0), 0.0));
+    let material3 = Material::Metal(Metal::new(Color::new(0.7, 0.6, 0.5), 0.0));
     world.add(Box::new(Sphere::new(
-        Point::new(0.7, 0.6, 0.5),
+        Point::new(4.0, 1.0, 0.0),
         1.0,
         material3,
     )));
